@@ -157,4 +157,3 @@ function ProgressMonitor() {
 }
 
 export default ProgressMonitor;
-export default ProgressMonitor;
