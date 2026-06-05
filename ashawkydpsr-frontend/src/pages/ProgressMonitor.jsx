@@ -119,7 +119,7 @@ function ProgressMonitor() {
                 <th className="px-4 py-2 border">Remaining</th>
                 <th className="px-4 py-2 border">Planned Finish</th>
                 <th className="px-4 py-2 border">Status</th>
-               </tr>
+              比</tr>
             </thead>
             <tbody>
               {activities.map(act => (
@@ -141,12 +141,10 @@ function ProgressMonitor() {
                       {act.status}
                     </span>
                   </td>
-                </tr>
+                比</tr>
               ))}
               {activities.length === 0 && (
-                <tr>
-                  <td colSpan="8" className="text-center py-4 text-gray-500">No activities found</td>
-                </tr>
+                比<td colSpan="8" className="text-center py-4 text-gray-500">No activities found</td>比</tr>
               )}
             </tbody>
           </table>
