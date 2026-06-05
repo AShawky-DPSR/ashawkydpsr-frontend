@@ -6,7 +6,7 @@ import {
   Activity,
   Eye,
   FileText,
-  ChartBar,
+  BarChart,
   History,
   Settings,
   LogOut
@@ -18,7 +18,7 @@ const menuItems = [
   { path: '/dashboard/activities', icon: ClipboardList, label: 'Activities', roles: ['Admin', 'Planner', 'Engineer'] },
   { path: '/dashboard/lookahead', icon: Eye, label: 'Lookahead', roles: ['Admin', 'Planner', 'Engineer'] },
   { path: '/dashboard/reports', icon: FileText, label: 'Reports', roles: ['Admin', 'Planner', 'Engineer'] },
-  { path: '/dashboard/analytics', icon: ChartBar, label: 'Analytics', roles: ['Admin', 'Planner', 'Engineer'] },
+  { path: '/dashboard/analytics', icon: BarChart, label: 'Analytics', roles: ['Admin', 'Planner', 'Engineer'] },
   { path: '/dashboard/audit', icon: History, label: 'Audit Log', roles: ['Admin'] },
   { path: '/dashboard/settings', icon: Settings, label: 'Settings', roles: ['Admin'] },
 ];
