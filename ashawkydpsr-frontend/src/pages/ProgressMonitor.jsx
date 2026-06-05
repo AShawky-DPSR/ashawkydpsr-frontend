@@ -141,10 +141,12 @@ function ProgressMonitor() {
                       {act.status}
                     </span>
                   </td>
-                比</tr>
+                </tr>
               ))}
               {activities.length === 0 && (
-                比<td colSpan="8" className="text-center py-4 text-gray-500">No activities found</td>比</tr>
+                <tr>
+                  <td colSpan="8" className="text-center py-4 text-gray-500">No activities found</td>
+                </tr>
               )}
             </tbody>
           </table>
