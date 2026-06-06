@@ -1,31 +1,32 @@
 import React, { useState, useEffect } from 'react';
-import { fetchActivities, saveActivity, deleteActivity } from '../services/mockData';
 
 const Activities = () => {
   const [activities, setActivities] = useState([]);
   const [newAct, setNewAct] = useState({ name: '', baselineDailyQty: 0 });
 
-  const load = async () => {
-    const data = await fetchActivities();
-    setActivities(data);
-  };
+  useEffect(() => {
+    const stored = localStorage.getItem('activities');
+    if (stored) setActivities(JSON.parse(stored));
+  }, []);
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => {
+    localStorage.setItem('activities', JSON.stringify(activities));
+  }, [activities]);
 
-  const handleAdd = async () => {
+  const handleAdd = () => {
     if (!newAct.name.trim()) return;
-    await saveActivity({
+    const newActivity = {
+      id: Date.now(),
       name: newAct.name,
       baselineDailyQty: Number(newAct.baselineDailyQty) || 0,
       status: 'Pending'
-    });
+    };
+    setActivities([...activities, newActivity]);
     setNewAct({ name: '', baselineDailyQty: 0 });
-    await load();
   };
 
-  const handleDelete = async (id) => {
-    await deleteActivity(id);
-    await load();
+  const handleDelete = (id) => {
+    setActivities(activities.filter(a => a.id !== id));
   };
 
   return (
