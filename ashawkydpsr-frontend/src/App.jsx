@@ -5,25 +5,17 @@ import ProgressMonitor from './pages/ProgressMonitor';
 import Activities from './pages/Activities';
 import Reports from './pages/Reports';
 import Settings from './pages/Settings';
-
-// Placeholder components (no separate files needed)
-const Lookahead = () => <div className="p-6"><h1 className="text-2xl font-bold">Lookahead</h1><p>Coming soon</p></div>;
-const Analytics = () => <div className="p-6"><h1 className="text-2xl font-bold">Analytics</h1><p>Coming soon</p></div>;
-const AuditLog = () => <div className="p-6"><h1 className="text-2xl font-bold">Audit Log</h1><p>Coming soon</p></div>;
-
-// License check from localStorage
-const checkLicense = () => {
-  const expiry = localStorage.getItem('licenseExpiry') || '2026-07-01';
-  return new Date(expiry) > new Date();
-};
+import Lookahead from './pages/Lookahead';
+import Analytics from './pages/Analytics';
+import AuditLog from './pages/AuditLog';
 
 function App() {
   const [user, setUser] = useState(null);
   const [loginError, setLoginError] = useState('');
 
   useEffect(() => {
-    const savedUser = localStorage.getItem('currentUser');
-    if (savedUser) setUser(JSON.parse(savedUser));
+    const saved = localStorage.getItem('currentUser');
+    if (saved) setUser(JSON.parse(saved));
   }, []);
 
   const handleLogin = (e) => {
@@ -31,55 +23,45 @@ function App() {
     const username = e.target.username.value;
     const password = e.target.password.value;
     const users = JSON.parse(localStorage.getItem('appUsers')) || [
-      { id: 1, username: 'admin', role: 'admin', password: 'admin123' },
-      { id: 2, username: 'planner1', role: 'planner', password: 'planner123' },
-      { id: 3, username: 'engineer1', role: 'engineer', password: 'eng123' }
+      { id: 1, username: 'admin', role: 'admin', password: 'admin123' }
     ];
     const found = users.find(u => u.username === username && u.password === password);
     if (found) {
-      const { password, ...userWithoutPass } = found;
-      setUser(userWithoutPass);
-      localStorage.setItem('currentUser', JSON.stringify(userWithoutPass));
+      const { password, ...rest } = found;
+      setUser(rest);
+      localStorage.setItem('currentUser', JSON.stringify(rest));
       setLoginError('');
     } else {
       setLoginError('Invalid username or password');
     }
   };
 
-  const handleLogout = () => {
+  const logout = () => {
     setUser(null);
     localStorage.removeItem('currentUser');
   };
 
-  if (!checkLicense()) {
-    return (
-      <div className="flex items-center justify-center h-screen bg-red-100">
-        <div className="bg-white p-8 rounded shadow text-center max-w-md">
-          <h1 className="text-2xl font-bold text-red-600 mb-4">License Expired</h1>
-          <p>Please contact support to renew your license.</p>
-        </div>
-      </div>
-    );
+  const licenseOk = () => {
+    const expiry = localStorage.getItem('licenseExpiry') || '2026-07-01';
+    return new Date(expiry) > new Date();
+  };
+
+  if (!licenseOk()) {
+    return <div className="p-8 text-center text-red-600 text-xl">License Expired – Contact Support</div>;
   }
 
   if (!user) {
     return (
-      <div className="flex items-center justify-center h-screen bg-gray-100">
+      <div className="flex h-screen items-center justify-center bg-gray-100">
         <div className="bg-white p-8 rounded shadow w-96">
           <h2 className="text-2xl font-bold mb-6 text-center">RFC Planning System</h2>
           <form onSubmit={handleLogin}>
-            <div className="mb-4">
-              <label className="block text-gray-700 mb-2">Username</label>
-              <input type="text" name="username" className="w-full border p-2 rounded" required />
-            </div>
-            <div className="mb-4">
-              <label className="block text-gray-700 mb-2">Password</label>
-              <input type="password" name="password" className="w-full border p-2 rounded" required />
-            </div>
-            {loginError && <p className="text-red-500 text-sm mb-4">{loginError}</p>}
+            <input type="text" name="username" placeholder="Username" className="w-full border p-2 mb-3 rounded" required />
+            <input type="password" name="password" placeholder="Password" className="w-full border p-2 mb-3 rounded" required />
+            {loginError && <p className="text-red-500 text-sm mb-3">{loginError}</p>}
             <button type="submit" className="w-full bg-blue-600 text-white p-2 rounded hover:bg-blue-700">Login</button>
           </form>
-          <p className="text-xs text-gray-500 mt-4 text-center">Demo: admin/admin123, planner1/planner123, engineer1/eng123</p>
+          <p className="text-xs text-gray-500 mt-4 text-center">Demo: admin / admin123</p>
         </div>
       </div>
     );
@@ -102,7 +84,7 @@ function App() {
               <li><Link to="/analytics" className="block py-2 px-3 rounded hover:bg-gray-700">Analytics</Link></li>
               <li><Link to="/audit" className="block py-2 px-3 rounded hover:bg-gray-700">Audit Log</Link></li>
               {canAccessSettings && <li><Link to="/settings" className="block py-2 px-3 rounded hover:bg-gray-700">Settings</Link></li>}
-              <li><button onClick={handleLogout} className="block w-full text-left py-2 px-3 rounded hover:bg-gray-700 text-red-300">Logout</button></li>
+              <li><button onClick={logout} className="block w-full text-left py-2 px-3 rounded hover:bg-gray-700 text-red-300">Logout</button></li>
             </ul>
           </nav>
         </div>
