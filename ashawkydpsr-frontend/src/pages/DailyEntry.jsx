@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { fetchActivities } from '../services/mockData';
 
 const DailyEntry = () => {
   const [entries, setEntries] = useState([]);
@@ -18,14 +17,15 @@ const DailyEntry = () => {
     nextDayPlan: '',
   });
 
-  // Load entries from localStorage on mount
+  // Load data from localStorage
   useEffect(() => {
-    const stored = localStorage.getItem('dailyEntries');
-    if (stored) setEntries(JSON.parse(stored));
-    fetchActivities().then(setActivities);
+    const storedEntries = localStorage.getItem('dailyEntries');
+    if (storedEntries) setEntries(JSON.parse(storedEntries));
+    const storedActs = localStorage.getItem('activities');
+    if (storedActs) setActivities(JSON.parse(storedActs));
   }, []);
 
-  // Save entries to localStorage whenever they change
+  // Save entries whenever they change
   useEffect(() => {
     localStorage.setItem('dailyEntries', JSON.stringify(entries));
   }, [entries]);
@@ -44,7 +44,7 @@ const DailyEntry = () => {
       timestamp: new Date().toLocaleString(),
     };
     setEntries([newEntry, ...entries]);
-    // Reset form except date
+    // Reset form
     setFormData({
       date: new Date().toISOString().split('T')[0],
       activity: '',
