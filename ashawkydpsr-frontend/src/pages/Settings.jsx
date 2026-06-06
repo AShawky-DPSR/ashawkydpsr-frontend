@@ -1,42 +1,53 @@
 import React, { useState, useEffect } from 'react';
-import { fetchSettings, saveSettings } from '../services/mockData';
 
 const Settings = () => {
-  const [settings, setSettings] = useState({});
-  const [users, setUsers] = useState([]);
+  const [engineerEditWindow, setEngineerEditWindow] = useState(24);
+  const [monthlyReportCycle, setMonthlyReportCycle] = useState('Calendar Month');
+  const [allowPlannersEdit, setAllowPlannersEdit] = useState(true);
+  const [workCalendar, setWorkCalendar] = useState(['Saturday','Sunday','Monday','Tuesday','Wednesday','Thursday','Friday']);
+  const [licenseExpiry, setLicenseExpiry] = useState('2026-07-01');
+  const [users, setUsers] = useState([
+    { id: 1, username: 'admin', role: 'admin', password: 'admin123' },
+    { id: 2, username: 'planner1', role: 'planner', password: 'planner123' },
+    { id: 3, username: 'engineer1', role: 'engineer', password: 'eng123' }
+  ]);
   const [newUser, setNewUser] = useState({ username: '', role: 'engineer', password: '' });
 
-  const load = async () => {
-    const data = await fetchSettings();
-    setSettings(data);
-    setUsers(data.users || []);
+  useEffect(() => {
+    const stored = localStorage.getItem('appSettings');
+    if (stored) {
+      const s = JSON.parse(stored);
+      setEngineerEditWindow(s.engineerEditWindow || 24);
+      setMonthlyReportCycle(s.monthlyReportCycle || 'Calendar Month');
+      setAllowPlannersEdit(s.allowPlannersEdit !== undefined ? s.allowPlannersEdit : true);
+      setWorkCalendar(s.workCalendar || ['Saturday','Sunday','Monday','Tuesday','Wednesday','Thursday','Friday']);
+      setLicenseExpiry(s.licenseExpiry || '2026-07-01');
+    }
+    const storedUsers = localStorage.getItem('appUsers');
+    if (storedUsers) setUsers(JSON.parse(storedUsers));
+  }, []);
+
+  const saveAll = () => {
+    const settings = { engineerEditWindow, monthlyReportCycle, allowPlannersEdit, workCalendar, licenseExpiry };
+    localStorage.setItem('appSettings', JSON.stringify(settings));
+    localStorage.setItem('appUsers', JSON.stringify(users));
+    localStorage.setItem('licenseExpiry', licenseExpiry);
+    alert('Settings saved (localStorage)');
   };
 
-  useEffect(() => { load(); }, []);
-
-  const updateSetting = (key, value) => {
-    setSettings({ ...settings, [key]: value });
-  };
-
-  const addUser = async () => {
+  const addUser = () => {
     if (!newUser.username) return;
-    const updatedUsers = [...users, { id: Date.now(), ...newUser }];
-    setUsers(updatedUsers);
-    setSettings({ ...settings, users: updatedUsers });
-    await saveSettings({ ...settings, users: updatedUsers });
+    setUsers([...users, { id: Date.now(), ...newUser }]);
     setNewUser({ username: '', role: 'engineer', password: '' });
   };
 
-  const deleteUser = async (id) => {
-    const updated = users.filter(u => u.id !== id);
-    setUsers(updated);
-    setSettings({ ...settings, users: updated });
-    await saveSettings({ ...settings, users: updated });
+  const deleteUser = (id) => {
+    setUsers(users.filter(u => u.id !== id));
   };
 
-  const saveAll = async () => {
-    await saveSettings(settings);
-    alert('Settings saved (mock)');
+  const toggleWorkDay = (day) => {
+    if (workCalendar.includes(day)) setWorkCalendar(workCalendar.filter(d => d !== day));
+    else setWorkCalendar([...workCalendar, day]);
   };
 
   return (
@@ -46,13 +57,13 @@ const Settings = () => {
         <div className="bg-white p-4 rounded shadow">
           <h2 className="text-xl font-semibold mb-2">Report Configuration</h2>
           <label>Engineer Edit Window (hours)</label>
-          <input type="number" value={settings.engineerEditWindow || 24} onChange={(e) => updateSetting('engineerEditWindow', e.target.value)} className="border p-2 w-full mb-2" />
+          <input type="number" value={engineerEditWindow} onChange={(e) => setEngineerEditWindow(e.target.value)} className="border p-2 w-full mb-2" />
           <label>Monthly Report Cycle</label>
-          <select value={settings.monthlyReportCycle || 'Calendar Month'} onChange={(e) => updateSetting('monthlyReportCycle', e.target.value)} className="border p-2 w-full mb-2">
+          <select value={monthlyReportCycle} onChange={(e) => setMonthlyReportCycle(e.target.value)} className="border p-2 w-full mb-2">
             <option>Calendar Month</option><option>Fiscal Month</option>
           </select>
           <label className="flex items-center gap-2">
-            <input type="checkbox" checked={settings.allowPlannersEdit || false} onChange={(e) => updateSetting('allowPlannersEdit', e.target.checked)} />
+            <input type="checkbox" checked={allowPlannersEdit} onChange={(e) => setAllowPlannersEdit(e.target.checked)} />
             Allow Planners to add/edit/delete activities
           </label>
         </div>
@@ -60,12 +71,7 @@ const Settings = () => {
           <h2 className="text-xl font-semibold mb-2">Work Calendar</h2>
           {['Saturday','Sunday','Monday','Tuesday','Wednesday','Thursday','Friday'].map(day => (
             <label key={day} className="flex items-center gap-2">
-              <input type="checkbox" checked={(settings.workCalendar || []).includes(day)} onChange={(e) => {
-                let newCal = [...(settings.workCalendar || [])];
-                if (e.target.checked) newCal.push(day);
-                else newCal = newCal.filter(d => d !== day);
-                updateSetting('workCalendar', newCal);
-              }} /> {day}
+              <input type="checkbox" checked={workCalendar.includes(day)} onChange={() => toggleWorkDay(day)} /> {day}
             </label>
           ))}
         </div>
@@ -88,8 +94,8 @@ const Settings = () => {
         </div>
         <div className="bg-white p-4 rounded shadow">
           <h2 className="text-xl font-semibold mb-2">License Management</h2>
-          <p>Current Expiry: {settings.licenseExpiry || '2026-07-01'}</p>
-          <input type="date" value={settings.licenseExpiry || ''} onChange={(e) => updateSetting('licenseExpiry', e.target.value)} className="border p-1" />
+          <p>Current Expiry: {licenseExpiry}</p>
+          <input type="date" value={licenseExpiry} onChange={(e) => setLicenseExpiry(e.target.value)} className="border p-1" />
           <button className="bg-green-600 text-white px-4 py-1 rounded ml-2">Extend License</button>
         </div>
       </div>
