@@ -1,63 +1,71 @@
 import React, { useState, useEffect } from 'react';
+import { fetchProgress, saveProgressItem, updateProgressItem, deleteProgressItem, fetchActivities } from '../services/mockData';
 
 const ProgressMonitor = () => {
+  const [progress, setProgress] = useState([]);
   const [activities, setActivities] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [newItem, setNewItem] = useState({ activity: '', assignee: '', dueDate: '', status: 'Not Started' });
 
-  useEffect(() => {
-    const fetchActivities = async () => {
-      try {
-        // Replace with your actual API call
-        const response = await fetch('/api/progress');
-        const data = await response.json();
-        setActivities(data);
-      } catch (error) {
-        console.error('Failed to load activities', error);
-        // Fallback mock data
-        setActivities([
-          { id: 1, name: 'Design Review', assignee: 'Alice', dueDate: '2026-06-10', status: 'Completed' },
-          { id: 2, name: 'Frontend Build', assignee: 'Bob', dueDate: '2026-06-12', status: 'In Progress' },
-        ]);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchActivities();
-  }, []);
+  const load = async () => {
+    const [prog, acts] = await Promise.all([fetchProgress(), fetchActivities()]);
+    setProgress(prog);
+    setActivities(acts);
+  };
 
-  if (loading) {
-    return <div className="p-4 text-center">Loading progress data...</div>;
-  }
+  useEffect(() => { load(); }, []);
+
+  const handleAdd = async () => {
+    if (!newItem.activity) return;
+    await saveProgressItem(newItem);
+    setNewItem({ activity: '', assignee: '', dueDate: '', status: 'Not Started' });
+    load();
+  };
+
+  const handleStatusChange = async (id, newStatus) => {
+    await updateProgressItem(id, { status: newStatus });
+    load();
+  };
+
+  const handleDelete = async (id) => {
+    await deleteProgressItem(id);
+    load();
+  };
 
   return (
-    <div className="p-6 bg-white rounded shadow">
-      <h2 className="text-2xl font-bold mb-4">Progress Monitor</h2>
+    <div className="p-6">
+      <h1 className="text-2xl font-bold mb-4">Progress Monitor</h1>
+      <div className="bg-white p-4 rounded shadow mb-6">
+        <div className="flex gap-2 flex-wrap">
+          <select value={newItem.activity} onChange={(e) => setNewItem({...newItem, activity: e.target.value})} className="border p-2 rounded">
+            <option value="">Select Activity</option>
+            {activities.map(act => <option key={act.id} value={act.name}>{act.name}</option>)}
+          </select>
+          <input type="text" placeholder="Assignee" value={newItem.assignee} onChange={(e) => setNewItem({...newItem, assignee: e.target.value})} className="border p-2 rounded" />
+          <input type="date" value={newItem.dueDate} onChange={(e) => setNewItem({...newItem, dueDate: e.target.value})} className="border p-2 rounded" />
+          <select value={newItem.status} onChange={(e) => setNewItem({...newItem, status: e.target.value})} className="border p-2 rounded">
+            <option>Not Started</option><option>In Progress</option><option>Completed</option><option>Delayed</option>
+          </select>
+          <button onClick={handleAdd} className="bg-green-600 text-white px-4 py-2 rounded">Add</button>
+        </div>
+      </div>
       <div className="overflow-x-auto">
-        <table className="min-w-full border-collapse border border-gray-300">
-          <thead>
-            <tr>
-              <th className="px-4 py-2 border bg-gray-100">Activity</th>
-              <th className="px-4 py-2 border bg-gray-100">Assignee</th>
-              <th className="px-4 py-2 border bg-gray-100">Due Date</th>
-              <th className="px-4 py-2 border bg-gray-100">Status</th>
-            </tr>
-          </thead>
+        <table className="min-w-full border">
+          <thead className="bg-gray-100"><tr><th className="border p-2">Activity</th><th>Assignee</th><th>Due Date</th><th>Status</th><th>Actions</th></tr></thead>
           <tbody>
-            {activities.map((act) => (
-              <tr key={act.id}>
-                <td className="px-4 py-2 border">{act.name}</td>
-                <td className="px-4 py-2 border">{act.assignee}</td>
-                <td className="px-4 py-2 border">{act.dueDate}</td>
-                <td className="px-4 py-2 border">{act.status}</td>
+            {progress.map(p => (
+              <tr key={p.id}>
+                <td className="border p-2">{p.activity}</td>
+                <td className="border p-2">{p.assignee}</td>
+                <td className="border p-2">{p.dueDate}</td>
+                <td className="border p-2">
+                  <select value={p.status} onChange={(e) => handleStatusChange(p.id, e.target.value)} className="border p-1 rounded">
+                    <option>Not Started</option><option>In Progress</option><option>Completed</option><option>Delayed</option>
+                  </select>
+                </td>
+                <td className="border p-2"><button onClick={() => handleDelete(p.id)} className="text-red-500">Delete</button></td>
               </tr>
             ))}
-            {activities.length === 0 && (
-              <tr>
-                <td colSpan="4" className="text-center py-4 text-gray-500">
-                  No activities found
-                </td>
-              </tr>
-            )}
+            {progress.length === 0 && <tr><td colSpan="5" className="text-center p-4">No progress items</td></tr>}
           </tbody>
         </table>
       </div>
