@@ -1,18 +1,17 @@
 import React, { useState, useEffect } from 'react';
-export default function Lookahead() {
-  const [items, setItems] = useState([]);
+export default function AuditLog() {
+  const [logs, setLogs] = useState([]);
   useEffect(() => {
-    setItems(JSON.parse(localStorage.getItem('progressItems') || '[]'));
+    setLogs(JSON.parse(localStorage.getItem('auditLog') || '[]'));
   }, []);
-  const upcoming = items.filter(i => i.status !== 'Completed');
   return (
     <div className="p-6">
-      <h1 className="text-2xl font-bold mb-4">Lookahead (Upcoming Tasks)</h1>
-      {upcoming.length === 0 ? <p>No upcoming tasks.</p> : (
+      <h1 className="text-2xl font-bold mb-4">Audit Log</h1>
+      {logs.length === 0 ? <p>No actions recorded yet.</p> : (
         <table className="min-w-full border">
-          <thead className="bg-gray-100"><tr><th className="border p-2">Activity</th><th>Due Date</th><th>Status</th></tr></thead>
+          <thead className="bg-gray-100"><tr><th className="border p-2">Timestamp</th><th>Action</th><th>Details</th></tr></thead>
           <tbody>
-            {upcoming.map(i => <tr key={i.id}><td className="border p-2">{i.activity}</td><td className="border p-2">{i.dueDate}</td><td className="border p-2">{i.status}</td></tr>)}
+            {logs.map((l, i) => <tr key={i}><td className="border p-2">{l.timestamp}</td><td className="border p-2">{l.action}</td><td className="border p-2">{l.details}</td></tr>)}
           </tbody>
         </table>
       )}
