@@ -18,11 +18,6 @@ const Settings = () => {
     setSettings({ ...settings, [key]: value });
   };
 
-  const handleSaveAll = async () => {
-    await saveSettings(settings);
-    alert('Settings saved (mock)');
-  };
-
   const addUser = async () => {
     if (!newUser.username) return;
     const updatedUsers = [...users, { id: Date.now(), ...newUser }];
@@ -37,6 +32,11 @@ const Settings = () => {
     setUsers(updated);
     setSettings({ ...settings, users: updated });
     await saveSettings({ ...settings, users: updated });
+  };
+
+  const saveAll = async () => {
+    await saveSettings(settings);
+    alert('Settings saved (mock)');
   };
 
   return (
@@ -93,7 +93,7 @@ const Settings = () => {
           <button className="bg-green-600 text-white px-4 py-1 rounded ml-2">Extend License</button>
         </div>
       </div>
-      <button onClick={handleSaveAll} className="mt-6 bg-blue-700 text-white px-6 py-2 rounded">SAVE ALL SETTINGS</button>
+      <button onClick={saveAll} className="mt-6 bg-blue-700 text-white px-6 py-2 rounded">SAVE ALL SETTINGS</button>
     </div>
   );
 };
