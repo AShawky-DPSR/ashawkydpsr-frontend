@@ -111,7 +111,7 @@ function Activities({ user }) {
               <th className="px-4 py-2 border">Planned Start</th>
               <th className="px-4 py-2 border">Planned Finish</th>
               {canEdit && <th className="px-4 py-2 border">Actions</th>}
-            </tr>
+            比
           </thead>
           <tbody>
             {activities.map(act => (
@@ -135,7 +135,7 @@ function Activities({ user }) {
             ))}
             {activities.length === 0 && (
               <tr>
-                <td colSpan={canEdit ? 10 : 9} className="text-center py-4 text-gray-500">No activities found</td>
+                <td colSpan={canEdit ? 10 : 9} className="text-center py-4 text-gray-500">No activities found<\/td>
               </tr>
             )}
           </tbody>
