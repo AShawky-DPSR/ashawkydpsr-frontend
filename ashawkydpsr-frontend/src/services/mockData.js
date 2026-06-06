@@ -1,5 +1,5 @@
 // src/services/mockData.js
-// This is a TEMPORARY mock – replace with real API calls later.
+// In‑memory mock – resets on refresh. Replace with real API later.
 
 let dailyEntries = [];
 let activities = [];
@@ -17,13 +17,10 @@ let settings = {
   ]
 };
 
-// Helper to simulate async API
 const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
-export const fetchDailyEntries = async () => {
-  await delay(100);
-  return [...dailyEntries];
-};
+// Daily entries
+export const fetchDailyEntries = async () => { await delay(100); return [...dailyEntries]; };
 export const saveDailyEntry = async (entry) => {
   await delay(100);
   const newEntry = { ...entry, id: Date.now() };
@@ -35,10 +32,8 @@ export const deleteDailyEntry = async (id) => {
   dailyEntries = dailyEntries.filter(e => e.id !== id);
 };
 
-export const fetchActivities = async () => {
-  await delay(100);
-  return [...activities];
-};
+// Activities
+export const fetchActivities = async () => { await delay(100); return [...activities]; };
 export const saveActivity = async (act) => {
   await delay(100);
   const newAct = { ...act, id: Date.now() };
@@ -50,10 +45,8 @@ export const deleteActivity = async (id) => {
   activities = activities.filter(a => a.id !== id);
 };
 
-export const fetchProgress = async () => {
-  await delay(100);
-  return [...progressItems];
-};
+// Progress
+export const fetchProgress = async () => { await delay(100); return [...progressItems]; };
 export const saveProgressItem = async (item) => {
   await delay(100);
   const newItem = { ...item, id: Date.now() };
@@ -71,17 +64,15 @@ export const deleteProgressItem = async (id) => {
   progressItems = progressItems.filter(p => p.id !== id);
 };
 
-export const fetchSettings = async () => {
-  await delay(100);
-  return { ...settings };
-};
+// Settings
+export const fetchSettings = async () => { await delay(100); return { ...settings }; };
 export const saveSettings = async (newSettings) => {
   await delay(100);
   settings = { ...settings, ...newSettings };
   return settings;
 };
 
-// Auth mock
+// Auth & License
 export const login = async (username, password) => {
   await delay(300);
   const user = settings.users.find(u => u.username === username && u.password === password);
@@ -89,8 +80,6 @@ export const login = async (username, password) => {
   const { password: _, ...userWithoutPassword } = user;
   return userWithoutPassword;
 };
-
-// License check
 export const checkLicense = async () => {
   await delay(50);
   const expiry = settings.licenseExpiry;
