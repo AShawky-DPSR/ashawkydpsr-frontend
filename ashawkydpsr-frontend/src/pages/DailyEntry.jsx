@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { fetchDailyEntries, saveDailyEntry, deleteDailyEntry, fetchActivities } from '../services/mockData';
+import { fetchActivities } from '../services/mockData';
 
 const DailyEntry = () => {
   const [entries, setEntries] = useState([]);
@@ -18,27 +18,32 @@ const DailyEntry = () => {
     nextDayPlan: '',
   });
 
-  const loadData = async () => {
-    const [fetchedEntries, fetchedActivities] = await Promise.all([
-      fetchDailyEntries(),
-      fetchActivities()
-    ]);
-    setEntries(fetchedEntries);
-    setActivities(fetchedActivities);
-  };
+  // Load entries from localStorage on mount
+  useEffect(() => {
+    const stored = localStorage.getItem('dailyEntries');
+    if (stored) setEntries(JSON.parse(stored));
+    fetchActivities().then(setActivities);
+  }, []);
 
-  useEffect(() => { loadData(); }, []);
+  // Save entries to localStorage whenever they change
+  useEffect(() => {
+    localStorage.setItem('dailyEntries', JSON.stringify(entries));
+  }, [entries]);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
     const cumulative = entries.reduce((sum, e) => sum + Number(e.actualQty), 0) + Number(formData.actualQty);
-    const newEntry = { ...formData, cumulative, timestamp: new Date().toLocaleString() };
-    await saveDailyEntry(newEntry);
-    await loadData();
+    const newEntry = {
+      id: Date.now(),
+      ...formData,
+      cumulative,
+      timestamp: new Date().toLocaleString(),
+    };
+    setEntries([newEntry, ...entries]);
     // Reset form except date
     setFormData({
       date: new Date().toISOString().split('T')[0],
@@ -55,9 +60,8 @@ const DailyEntry = () => {
     });
   };
 
-  const handleDelete = async (id) => {
-    await deleteDailyEntry(id);
-    await loadData();
+  const handleDelete = (id) => {
+    setEntries(entries.filter(e => e.id !== id));
   };
 
   return (
