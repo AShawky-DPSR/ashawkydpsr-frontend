@@ -4,7 +4,6 @@ import { fetchActivities, saveActivity, deleteActivity } from '../services/mockD
 const Activities = () => {
   const [activities, setActivities] = useState([]);
   const [newAct, setNewAct] = useState({ name: '', baselineDailyQty: 0 });
-  const [canEdit] = useState(true);
 
   const load = async () => {
     const data = await fetchActivities();
