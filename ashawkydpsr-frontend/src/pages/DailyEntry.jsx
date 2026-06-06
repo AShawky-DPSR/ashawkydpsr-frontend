@@ -18,7 +18,7 @@ const DailyEntry = () => {
     nextDayPlan: '',
   });
 
-  const loadAll = async () => {
+  const loadData = async () => {
     const [fetchedEntries, fetchedActivities] = await Promise.all([
       fetchDailyEntries(),
       fetchActivities()
@@ -27,7 +27,7 @@ const DailyEntry = () => {
     setActivities(fetchedActivities);
   };
 
-  useEffect(() => { loadAll(); }, []);
+  useEffect(() => { loadData(); }, []);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -36,14 +36,10 @@ const DailyEntry = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     const cumulative = entries.reduce((sum, e) => sum + Number(e.actualQty), 0) + Number(formData.actualQty);
-    const newEntry = {
-      ...formData,
-      cumulative,
-      timestamp: new Date().toLocaleString()
-    };
+    const newEntry = { ...formData, cumulative, timestamp: new Date().toLocaleString() };
     await saveDailyEntry(newEntry);
-    await loadAll(); // refresh list
-    // reset form
+    await loadData();
+    // Reset form except date
     setFormData({
       date: new Date().toISOString().split('T')[0],
       activity: '',
@@ -61,7 +57,7 @@ const DailyEntry = () => {
 
   const handleDelete = async (id) => {
     await deleteDailyEntry(id);
-    await loadAll();
+    await loadData();
   };
 
   return (
