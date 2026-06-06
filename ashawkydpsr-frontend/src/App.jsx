@@ -5,11 +5,13 @@ import ProgressMonitor from './pages/ProgressMonitor';
 import Activities from './pages/Activities';
 import Reports from './pages/Reports';
 import Settings from './pages/Settings';
-import Lookahead from './pages/Lookahead';
-import Analytics from './pages/Analytics';
-import AuditLog from './pages/AuditLog';
 
-// Simple license check (from localStorage)
+// Placeholder components (no separate files needed)
+const Lookahead = () => <div className="p-6"><h1 className="text-2xl font-bold">Lookahead</h1><p>Coming soon</p></div>;
+const Analytics = () => <div className="p-6"><h1 className="text-2xl font-bold">Analytics</h1><p>Coming soon</p></div>;
+const AuditLog = () => <div className="p-6"><h1 className="text-2xl font-bold">Audit Log</h1><p>Coming soon</p></div>;
+
+// License check from localStorage
 const checkLicense = () => {
   const expiry = localStorage.getItem('licenseExpiry') || '2026-07-01';
   return new Date(expiry) > new Date();
@@ -20,7 +22,6 @@ function App() {
   const [loginError, setLoginError] = useState('');
 
   useEffect(() => {
-    // Auto-login for demo (remove later)
     const savedUser = localStorage.getItem('currentUser');
     if (savedUser) setUser(JSON.parse(savedUser));
   }, []);
@@ -29,7 +30,6 @@ function App() {
     e.preventDefault();
     const username = e.target.username.value;
     const password = e.target.password.value;
-    // Hardcoded users (you can change in Settings)
     const users = JSON.parse(localStorage.getItem('appUsers')) || [
       { id: 1, username: 'admin', role: 'admin', password: 'admin123' },
       { id: 2, username: 'planner1', role: 'planner', password: 'planner123' },
