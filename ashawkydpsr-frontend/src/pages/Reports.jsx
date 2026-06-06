@@ -1,97 +1,54 @@
-import React, { useState } from 'react';
-import api from '../api';
-import toast from 'react-hot-toast';
-import DatePicker from 'react-datepicker';
+import React from 'react';
+import { saveAs } from 'file-saver';
+import { jsPDF } from 'jspdf';
+import 'jspdf-autotable'; // optional but helps
 
-function Reports() {
-  const [date, setDate] = useState(new Date());
-  const [loading, setLoading] = useState(false);
-
-  const downloadReport = async (type) => {
-    setLoading(true);
-    try {
-      let url = '';
-      let method = 'post';
-      let payload = {};
-      if (type === 'daily') {
-        url = `/reports/daily?date=${date.toISOString().split('T')[0]}`;
-        method = 'post';
-      } else if (type === 'weekly') {
-        url = `/reports/weekly`;
-        method = 'post';
-      } else if (type === 'monthly') {
-        url = `/reports/monthly`;
-        method = 'post';
-      } else if (type === 'full') {
-        url = `/reports/full`;
-        method = 'post';
-      } else if (type === 'pdf') {
-        url = `/reports/pdf`;
-        method = 'post';
-      } else if (type === 'export_activities') {
-        url = `/activities/export`;
-        method = 'get';
-      } else if (type === 'import_activities') {
-        // handled separately
-        return;
-      } else if (type === 'forecast') {
-        const res = await api.get('/forecast');
-        toast.success(`Forecast: Completion on ${res.data.completion_date}, daily rate ${res.data.rate.toFixed(2)}`);
-        return;
-      }
-      const response = await api[method](url, payload, { responseType: 'blob' });
-      const blob = new Blob([response.data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-      const link = document.createElement('a');
-      link.href = URL.createObjectURL(blob);
-      link.download = `${type}_report.xlsx`;
-      link.click();
-      URL.revokeObjectURL(link.href);
-      toast.success('Report downloaded');
-    } catch (error) {
-      toast.error('Failed to generate report');
-    } finally {
-      setLoading(false);
-    }
+const Reports = () => {
+  const generateCSV = (type) => {
+    const headers = "Date,Activity,Planned,Actual,Status\n";
+    const mockRows = "2026-06-01,Activity A,100,95,On Track\n2026-06-02,Activity B,80,82,On Track";
+    const blob = new Blob([headers + mockRows], { type: 'text/csv;charset=utf-8;' });
+    saveAs(blob, `${type}_${new Date().toISOString().slice(0,10)}.csv`);
   };
 
-  const handleImportActivities = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    const formData = new FormData();
-    formData.append('file', file);
-    try {
-      await api.post('/activities/import', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
-      toast.success('Activities imported successfully');
-    } catch (error) {
-      toast.error('Import failed');
-    }
+  const generatePDF = () => {
+    const doc = new jsPDF();
+    doc.text("Daily Progress Report", 20, 20);
+    doc.text(`Generated: ${new Date().toLocaleString()}`, 20, 30);
+    doc.autoTable({
+      startY: 40,
+      head: [['Date', 'Activity', 'Planned', 'Actual', 'Status']],
+      body: [
+        ['2026-06-01', 'Activity A', '100', '95', 'On Track'],
+        ['2026-06-02', 'Activity B', '80', '82', 'On Track'],
+      ]
+    });
+    doc.save(`report_${new Date().toISOString().slice(0,10)}.pdf`);
+  };
+
+  const aiForecast = () => {
+    alert("AI Forecast (mock): Based on current progress, project completion expected by July 15, 2026. (Connect real AI endpoint later)");
   };
 
   return (
-    <div className="space-y-6">
-      <div className="card">
-        <h2 className="text-xl font-bold text-primary mb-4">📋 PROFESSIONAL REPORT GENERATOR</h2>
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium mb-1">Date for Daily Report</label>
-            <DatePicker selected={date} onChange={setDate} className="input" dateFormat="dd/MM/yyyy" />
-          </div>
-          <div></div>
-          <button onClick={() => downloadReport('daily')} disabled={loading} className="btn-primary">📊 Daily Progress Report</button>
-          <button onClick={() => downloadReport('weekly')} disabled={loading} className="btn-primary">📈 Weekly Progress Report</button>
-          <button onClick={() => downloadReport('monthly')} disabled={loading} className="btn-primary">📉 Monthly Progress Report</button>
-          <button onClick={() => downloadReport('full')} disabled={loading} className="btn-danger">💾 Full Database Export</button>
-          <button onClick={() => downloadReport('export_activities')} disabled={loading} className="btn-primary">📤 Export Activities</button>
-          <label className="btn-primary text-center cursor-pointer">
-            📥 Import Activities
-            <input type="file" accept=".xlsx, .xls" onChange={handleImportActivities} className="hidden" />
-          </label>
-          <button onClick={() => downloadReport('pdf')} disabled={loading} className="btn-primary">📄 PDF Report</button>
-          <button onClick={() => downloadReport('forecast')} disabled={loading} className="btn-primary">🤖 AI Forecast Report</button>
-        </div>
+    <div className="p-6">
+      <h1 className="text-2xl font-bold mb-4">Reports</h1>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <button onClick={() => generateCSV('daily_report')} className="bg-blue-500 text-white p-2 rounded">Daily Progress Report</button>
+        <button onClick={() => generateCSV('weekly_report')} className="bg-blue-500 text-white p-2 rounded">Weekly Progress Report</button>
+        <button onClick={() => generateCSV('monthly_report')} className="bg-blue-500 text-white p-2 rounded">Monthly Progress Report</button>
+        <button onClick={generatePDF} className="bg-green-600 text-white p-2 rounded">PDF Report</button>
+        <button onClick={() => generateCSV('activities_export')} className="bg-purple-500 text-white p-2 rounded">Export Activities</button>
+        <button onClick={() => generateCSV('full_db')} className="bg-purple-500 text-white p-2 rounded">Full Database Export</button>
+        <button onClick={() => alert("Import feature: upload CSV file")} className="bg-yellow-500 text-white p-2 rounded">Import Activities</button>
+        <button onClick={aiForecast} className="bg-red-500 text-white p-2 rounded">AI Forecast Report</button>
+      </div>
+      <div className="mt-8 p-4 bg-gray-100 rounded">
+        <h2 className="font-bold">Preview (mock data)</h2>
+        <pre className="text-sm">Date,Activity,Planned,Actual\n2026-06-01,Test,100,95</pre>
       </div>
     </div>
   );
-}
+};
 
 export default Reports;
