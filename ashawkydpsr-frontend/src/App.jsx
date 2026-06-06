@@ -6,14 +6,23 @@ import ProgressMonitor from './pages/ProgressMonitor';
 import Activities from './pages/Activities';
 import Reports from './pages/Reports';
 import Settings from './pages/Settings';
-import Lookahead from './pages/Lookahead';
-import Analytics from './pages/Analytics';
-import AuditLog from './pages/AuditLog';
 
-// Placeholders – replace with your real pages later
-const Placeholder = ({ title }) => (
+// Placeholder components for missing pages (no separate files needed)
+const Lookahead = () => (
   <div className="p-6">
-    <h1 className="text-2xl font-bold">{title}</h1>
+    <h1 className="text-2xl font-bold">Lookahead</h1>
+    <p className="mt-4">Coming soon</p>
+  </div>
+);
+const Analytics = () => (
+  <div className="p-6">
+    <h1 className="text-2xl font-bold">Analytics</h1>
+    <p className="mt-4">Coming soon</p>
+  </div>
+);
+const AuditLog = () => (
+  <div className="p-6">
+    <h1 className="text-2xl font-bold">Audit Log</h1>
     <p className="mt-4">Coming soon</p>
   </div>
 );
@@ -80,7 +89,7 @@ function App() {
   return (
     <BrowserRouter>
       <div className="flex min-h-screen">
-        {/* Sidebar - original style */}
+        {/* Sidebar */}
         <div className="w-64 bg-gray-800 text-white p-4">
           <h2 className="text-xl font-bold mb-6">RFC System</h2>
           <nav>
@@ -102,10 +111,10 @@ function App() {
             <Route path="/daily" element={<DailyEntry />} />
             <Route path="/progress" element={<ProgressMonitor />} />
             <Route path="/activities" element={<Activities />} />
-            <Route path="/lookahead" element={<Placeholder title="Lookahead" />} />
+            <Route path="/lookahead" element={<Lookahead />} />
             <Route path="/reports" element={<Reports />} />
-            <Route path="/analytics" element={<Placeholder title="Analytics" />} />
-            <Route path="/audit" element={<Placeholder title="Audit Log" />} />
+            <Route path="/analytics" element={<Analytics />} />
+            <Route path="/audit" element={<AuditLog />} />
             {canAccessSettings && <Route path="/settings" element={<Settings />} />}
             <Route path="/" element={<Navigate to="/daily" />} />
           </Routes>
