@@ -1,234 +1,170 @@
-import React, { useEffect, useState } from 'react';
-import api from '../api';
-import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, PieChart, Pie, Cell, ResponsiveContainer, ComposedChart, Area } from 'recharts';
+import React, { useState, useEffect } from 'react';
+import {
+  BarChart, Bar, LineChart, Line, AreaChart, Area, PieChart, Pie, Cell,
+  RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis,
+  ComposedChart, Scatter, XAxis, YAxis, CartesianGrid, Tooltip, Legend,
+  ResponsiveContainer, RadialBarChart, RadialBar, Treemap, Sankey
+} from 'recharts';
 
-function Analytics() {
-  const [sCurveData, setSCurveData] = useState([]);
-  const [statusData, setStatusData] = useState([]);
-  const [manpowerData, setManpowerData] = useState([]);
-  const [productivityData, setProductivityData] = useState([]);
-  const [weeklyData, setWeeklyData] = useState([]);
-  const [varianceData, setVarianceData] = useState([]);
-  const [forecastData, setForecastData] = useState([]);
-  const [loading, setLoading] = useState(true);
+const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d', '#ffc658', '#8dd1e1', '#a4de6c', '#d0ed57'];
+
+const Analytics = () => {
+  const [dailyData, setDailyData] = useState([]);
+  const [activities, setActivities] = useState([]);
+  const [progress, setProgress] = useState([]);
 
   useEffect(() => {
-    fetchAllData();
+    const entries = JSON.parse(localStorage.getItem('dailyEntries') || '[]');
+    const acts = JSON.parse(localStorage.getItem('activities') || '[]');
+    const prog = JSON.parse(localStorage.getItem('progressItems') || '[]');
+    setDailyData(entries);
+    setActivities(acts);
+    setProgress(prog);
   }, []);
 
-  const fetchAllData = async () => {
-    try {
-      // Progress activities for status and S-curve placeholder
-      const progressRes = await api.get('/progress/activities');
-      const acts = progressRes.data;
-      const statusCount = { Completed: 0, 'On Track': 0, Delayed: 0, Critical: 0 };
-      acts.forEach(act => {
-        if (act.status.includes('Completed')) statusCount.Completed++;
-        else if (act.status.includes('On Track')) statusCount['On Track']++;
-        else if (act.status.includes('Delayed')) statusCount.Delayed++;
-        else statusCount.Critical++;
-      });
-      setStatusData(Object.entries(statusCount).map(([name, value]) => ({ name, value })));
-
-      // For S-curve, we need daily cumulative – fetch from backend? We'll use mock for now, but ideally from API.
-      // Simulate S-curve data (can be replaced with real data later)
-      setSCurveData([
-        { date: 'Week 1', actual: 20, planned: 25 },
-        { date: 'Week 2', actual: 45, planned: 50 },
-        { date: 'Week 3', actual: 70, planned: 75 },
-        { date: 'Week 4', actual: 90, planned: 100 },
-      ]);
-
-      // Manpower over time – fetch from backend? For now mock
-      setManpowerData([
-        { date: '2026-06-01', manpower: 12 },
-        { date: '2026-06-02', manpower: 15 },
-        { date: '2026-06-03', manpower: 18 },
-        { date: '2026-06-04', manpower: 20 },
-        { date: '2026-06-05', manpower: 22 },
-        { date: '2026-06-06', manpower: 25 },
-      ]);
-
-      // Productivity per activity (mock)
-      setProductivityData(acts.map(act => ({ name: act.activity_code, productivity: Math.random() * 20 + 5 })));
-
-      // Weekly planned vs actual (mock)
-      setWeeklyData([
-        { week: 'Week 1', planned: 100, actual: 80 },
-        { week: 'Week 2', planned: 120, actual: 110 },
-        { week: 'Week 3', planned: 140, actual: 135 },
-        { week: 'Week 4', planned: 160, actual: 150 },
-      ]);
-
-      // Variance trend (mock)
-      setVarianceData([
-        { date: 'Week 1', variance: -5 },
-        { date: 'Week 2', variance: -2 },
-        { date: 'Week 3', variance: 1 },
-        { date: 'Week 4', variance: 3 },
-      ]);
-
-      // Forecast chart
-      const totalQty = acts.reduce((sum, a) => sum + a.total, 0);
-      const installed = acts.reduce((sum, a) => sum + a.installed, 0);
-      setForecastData([{ name: 'Installed', value: installed }, { name: 'Remaining', value: totalQty - installed }]);
-
-    } catch (error) {
-      console.error(error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const COLORS = ['#27ae60', '#4A90E2', '#e67e22', '#e74c3c'];
-
-  if (loading) return <div className="card">Loading charts...</div>;
+  // Prepare chart datasets
+  const barData = dailyData.map(d => ({ name: d.activity || 'Unknown', planned: d.plannedQty, actual: d.actualQty }));
+  const lineData = dailyData.map((d, i) => ({ name: `Day ${i+1}`, actual: d.actualQty }));
+  const areaData = dailyData.map((d, i) => ({ name: `Entry ${i+1}`, value: d.cumulative || 0 }));
+  const pieData = activities.map(a => ({ name: a.name, value: a.baselineDailyQty || 0 }));
+  const radarData = activities.map(a => ({ subject: a.name, A: a.baselineDailyQty || 0, B: 50 }));
+  const scatterData = dailyData.map(d => ({ x: d.plannedQty, y: d.actualQty, z: d.manpower }));
+  const radialData = activities.map((a, idx) => ({ name: a.name, uv: (a.baselineDailyQty || 0) % 100, fill: COLORS[idx % COLORS.length] }));
+  const treemapData = activities.map(a => ({ name: a.name, size: a.baselineDailyQty || 10 }));
+  const sankeyData = { nodes: [{name:'Planned'},{name:'Actual'},{name:'Gap'}], links: [{source:0,target:1,value:100},{source:1,target:2,value:20}] };
+  const compositionData = dailyData.map(d => ({ name: d.activity || '?', planned: d.plannedQty, actual: d.actualQty }));
+  const statusData = [
+    { name: 'Completed', value: progress.filter(p => p.status === 'Completed').length },
+    { name: 'In Progress', value: progress.filter(p => p.status === 'In Progress').length },
+    { name: 'Not Started', value: progress.filter(p => p.status === 'Not Started').length },
+    { name: 'Delayed', value: progress.filter(p => p.status === 'Delayed').length }
+  ];
+  const engineerData = dailyData.reduce((acc, d) => {
+    acc[d.engineer] = (acc[d.engineer] || 0) + d.actualQty;
+    return acc;
+  }, {});
+  const engineerChartData = Object.entries(engineerData).map(([name, value]) => ({ name, value }));
+  const cumulativeData = dailyData.reduce((acc, d, idx) => {
+    const prev = idx === 0 ? 0 : acc[idx-1].cumulative;
+    acc.push({ name: `Day ${idx+1}`, cumulative: prev + d.actualQty });
+    return acc;
+  }, []);
+  const weeklyData = dailyData.slice(-7).map((d,i) => ({ day: i+1, actual: d.actualQty }));
 
   return (
-    <div className="space-y-6">
+    <div className="p-4">
+      <h1 className="text-2xl font-bold mb-6">Analytics Dashboard</h1>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* 1. S-Curve */}
-        <div className="card">
-          <h2 className="text-xl font-bold text-primary mb-4">📈 S-Curve Analysis</h2>
+        {/* 1. Bar Chart */}
+        <div className="bg-white p-4 rounded shadow">
+          <h2 className="text-lg font-semibold mb-2">Planned vs Actual by Activity</h2>
           <ResponsiveContainer width="100%" height={300}>
-            <LineChart data={sCurveData}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="date" />
-              <YAxis />
-              <Tooltip />
-              <Legend />
-              <Line type="monotone" dataKey="actual" stroke="#4A90E2" name="Actual" />
-              <Line type="monotone" dataKey="planned" stroke="#e67e22" name="Planned" strokeDasharray="5 5" />
-            </LineChart>
+            <BarChart data={barData}><CartesianGrid strokeDasharray="3 3" /><XAxis dataKey="name" /><YAxis /><Tooltip /><Legend /><Bar dataKey="planned" fill="#8884d8" /><Bar dataKey="actual" fill="#82ca9d" /></BarChart>
           </ResponsiveContainer>
         </div>
-
-        {/* 2. Progress Gauge */}
-        <div className="card">
-          <h2 className="text-xl font-bold text-primary mb-4">📊 Overall Progress</h2>
+        {/* 2. Line Chart */}
+        <div className="bg-white p-4 rounded shadow">
+          <h2 className="text-lg font-semibold mb-2">Actual Progress Trend</h2>
           <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={[{ name: 'Progress', value: sCurveData[sCurveData.length-1]?.actual || 0 }]} layout="vertical">
-              <XAxis type="number" domain={[0,100]} />
-              <YAxis type="category" dataKey="name" hide />
-              <Tooltip />
-              <Bar dataKey="value" fill="#27ae60" barSize={50} />
-            </BarChart>
-          </ResponsiveContainer>
-          <p className="text-center text-3xl font-bold mt-4">{sCurveData[sCurveData.length-1]?.actual || 0}%</p>
-        </div>
-
-        {/* 3. Resource Histogram (Manpower per activity) */}
-        <div className="card">
-          <h2 className="text-xl font-bold text-primary mb-4">👷 Resource Histogram</h2>
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={productivityData}>
-              <XAxis dataKey="name" />
-              <YAxis />
-              <Tooltip />
-              <Bar dataKey="productivity" fill="#4A90E2" />
-            </BarChart>
+            <LineChart data={lineData}><CartesianGrid /><XAxis dataKey="name" /><YAxis /><Tooltip /><Line type="monotone" dataKey="actual" stroke="#8884d8" /></LineChart>
           </ResponsiveContainer>
         </div>
-
-        {/* 4. Trend Line (Daily Production) */}
-        <div className="card">
-          <h2 className="text-xl font-bold text-primary mb-4">📉 Daily Production Trend</h2>
+        {/* 3. Area Chart */}
+        <div className="bg-white p-4 rounded shadow">
+          <h2 className="text-lg font-semibold mb-2">Cumulative Value Over Time</h2>
           <ResponsiveContainer width="100%" height={300}>
-            <LineChart data={manpowerData}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="date" />
-              <YAxis />
-              <Tooltip />
-              <Line type="monotone" dataKey="manpower" stroke="#e67e22" />
-            </LineChart>
+            <AreaChart data={areaData}><CartesianGrid /><XAxis dataKey="name" /><YAxis /><Tooltip /><Area type="monotone" dataKey="value" stroke="#8884d8" fill="#8884d8" /></AreaChart>
           </ResponsiveContainer>
         </div>
-
-        {/* 5. Status Distribution (Pie) */}
-        <div className="card">
-          <h2 className="text-xl font-bold text-primary mb-4">🥧 Status Distribution</h2>
+        {/* 4. Pie Chart */}
+        <div className="bg-white p-4 rounded shadow">
+          <h2 className="text-lg font-semibold mb-2">Baseline QTY Distribution</h2>
           <ResponsiveContainer width="100%" height={300}>
-            <PieChart>
-              <Pie data={statusData} cx="50%" cy="50%" labelLine={false} label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`} outerRadius={80} fill="#8884d8" dataKey="value">
-                {statusData.map((entry, index) => <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />)}
-              </Pie>
-              <Tooltip />
-            </PieChart>
+            <PieChart><Pie data={pieData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80} fill="#8884d8" label><Cell fill="#0088FE" /><Cell fill="#00C49F" /><Cell fill="#FFBB28" /><Cell fill="#FF8042" /></Pie><Tooltip /></PieChart>
           </ResponsiveContainer>
         </div>
-
-        {/* 6. Forecast Chart */}
-        <div className="card">
-          <h2 className="text-xl font-bold text-primary mb-4">🔮 Completion Forecast</h2>
+        {/* 5. Radar Chart */}
+        <div className="bg-white p-4 rounded shadow">
+          <h2 className="text-lg font-semibold mb-2">Activity Baseline Comparison</h2>
           <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={forecastData}>
-              <XAxis dataKey="name" />
-              <YAxis />
-              <Tooltip />
-              <Bar dataKey="value" fill="#4A90E2" />
-            </BarChart>
+            <RadarChart data={radarData}><PolarGrid /><PolarAngleAxis dataKey="subject" /><PolarRadiusAxis /><Radar name="Baseline" dataKey="A" stroke="#8884d8" fill="#8884d8" fillOpacity={0.6} /></RadarChart>
           </ResponsiveContainer>
         </div>
-
-        {/* 7. Manpower over time (Line) */}
-        <div className="card">
-          <h2 className="text-xl font-bold text-primary mb-4">👥 Manpower Over Time</h2>
+        {/* 6. Scatter Plot */}
+        <div className="bg-white p-4 rounded shadow">
+          <h2 className="text-lg font-semibold mb-2">Planned vs Actual Scatter</h2>
           <ResponsiveContainer width="100%" height={300}>
-            <LineChart data={manpowerData}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="date" />
-              <YAxis />
-              <Tooltip />
-              <Line type="monotone" dataKey="manpower" stroke="#27ae60" />
-            </LineChart>
+            <ScatterChart><CartesianGrid /><XAxis dataKey="x" name="Planned" /><YAxis dataKey="y" name="Actual" /><Tooltip cursor={{ strokeDasharray: '3 3' }} /><Scatter name="Entries" data={scatterData} fill="#8884d8" /></ScatterChart>
           </ResponsiveContainer>
         </div>
-
-        {/* 8. Planned vs Actual Weekly */}
-        <div className="card">
-          <h2 className="text-xl font-bold text-primary mb-4">📊 Planned vs Actual (Weekly)</h2>
+        {/* 7. Radial Bar Chart */}
+        <div className="bg-white p-4 rounded shadow">
+          <h2 className="text-lg font-semibold mb-2">Activity Completion % (Radial)</h2>
           <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={weeklyData}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="week" />
-              <YAxis />
-              <Tooltip />
-              <Legend />
-              <Bar dataKey="planned" fill="#e67e22" />
-              <Bar dataKey="actual" fill="#27ae60" />
-            </BarChart>
+            <RadialBarChart data={radialData} innerRadius="20%" outerRadius="80%"><RadialBar dataKey="uv" /><Tooltip /></RadialBarChart>
           </ResponsiveContainer>
         </div>
-
-        {/* 9. Variance Trend */}
-        <div className="card">
-          <h2 className="text-xl font-bold text-primary mb-4">📉 Variance Trend (%)</h2>
+        {/* 8. Treemap */}
+        <div className="bg-white p-4 rounded shadow">
+          <h2 className="text-lg font-semibold mb-2">Baseline QTY Treemap</h2>
           <ResponsiveContainer width="100%" height={300}>
-            <LineChart data={varianceData}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="date" />
-              <YAxis />
-              <Tooltip />
-              <Line type="monotone" dataKey="variance" stroke="#e74c3c" />
-            </LineChart>
+            <Treemap data={treemapData} dataKey="size" ratio={4/3} stroke="#fff" fill="#8884d8" />
           </ResponsiveContainer>
         </div>
-
-        {/* 10. Productivity per Activity (Bar) */}
-        <div className="card">
-          <h2 className="text-xl font-bold text-primary mb-4">⚙ Productivity per Activity</h2>
+        {/* 9. Composed Chart */}
+        <div className="bg-white p-4 rounded shadow">
+          <h2 className="text-lg font-semibold mb-2">Planned, Actual & Trend</h2>
           <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={productivityData}>
-              <XAxis dataKey="name" />
-              <YAxis />
-              <Tooltip />
-              <Bar dataKey="productivity" fill="#4A90E2" />
-            </BarChart>
+            <ComposedChart data={compositionData}><CartesianGrid /><XAxis dataKey="name" /><YAxis /><Tooltip /><Legend /><Bar dataKey="planned" fill="#8884d8" /><Line dataKey="actual" stroke="#ff7300" /></ComposedChart>
+          </ResponsiveContainer>
+        </div>
+        {/* 10. Status Distribution Pie */}
+        <div className="bg-white p-4 rounded shadow">
+          <h2 className="text-lg font-semibold mb-2">Progress Status Distribution</h2>
+          <ResponsiveContainer width="100%" height={300}>
+            <PieChart><Pie data={statusData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80} fill="#8884d8" label><Cell fill="#00C49F" /><Cell fill="#FFBB28" /><Cell fill="#8884d8" /><Cell fill="#FF8042" /></Pie><Tooltip /></PieChart>
+          </ResponsiveContainer>
+        </div>
+        {/* 11. Engineer Contribution Bar */}
+        <div className="bg-white p-4 rounded shadow">
+          <h2 className="text-lg font-semibold mb-2">Actual QTY by Engineer</h2>
+          <ResponsiveContainer width="100%" height={300}>
+            <BarChart data={engineerChartData}><CartesianGrid /><XAxis dataKey="name" /><YAxis /><Tooltip /><Bar dataKey="value" fill="#82ca9d" /></BarChart>
+          </ResponsiveContainer>
+        </div>
+        {/* 12. Cumulative Progress Line */}
+        <div className="bg-white p-4 rounded shadow">
+          <h2 className="text-lg font-semibold mb-2">Cumulative Actual Progress</h2>
+          <ResponsiveContainer width="100%" height={300}>
+            <LineChart data={cumulativeData}><CartesianGrid /><XAxis dataKey="name" /><YAxis /><Tooltip /><Line type="monotone" dataKey="cumulative" stroke="#8884d8" /></LineChart>
+          </ResponsiveContainer>
+        </div>
+        {/* 13. Weekly Snapshot Bar */}
+        <div className="bg-white p-4 rounded shadow">
+          <h2 className="text-lg font-semibold mb-2">Last 7 Days Actual</h2>
+          <ResponsiveContainer width="100%" height={300}>
+            <BarChart data={weeklyData}><CartesianGrid /><XAxis dataKey="day" /><YAxis /><Tooltip /><Bar dataKey="actual" fill="#FF8042" /></BarChart>
+          </ResponsiveContainer>
+        </div>
+        {/* 14. Gauge-like Radial (using RadialBar) */}
+        <div className="bg-white p-4 rounded shadow">
+          <h2 className="text-lg font-semibold mb-2">Overall Progress Gauge</h2>
+          <ResponsiveContainer width="100%" height={300}>
+            <RadialBarChart cx="50%" cy="50%" innerRadius="60%" outerRadius="80%" data={[{ name: 'Progress', uv: (dailyData.reduce((s,d)=>s+d.actualQty,0) / (dailyData.reduce((s,d)=>s+d.plannedQty,1)) * 100) || 0 }]}>
+              <RadialBar dataKey="uv" fill="#8884d8" /><Tooltip />
+            </RadialBarChart>
+          </ResponsiveContainer>
+        </div>
+        {/* 15. Funnel / Sankey (simplified) */}
+        <div className="bg-white p-4 rounded shadow">
+          <h2 className="text-lg font-semibold mb-2">Planned to Actual Flow</h2>
+          <ResponsiveContainer width="100%" height={300}>
+            <Sankey data={sankeyData} nodePadding={50}><Tooltip /></Sankey>
           </ResponsiveContainer>
         </div>
       </div>
     </div>
   );
-}
+};
 
 export default Analytics;
