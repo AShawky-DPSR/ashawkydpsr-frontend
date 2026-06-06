@@ -1,55 +1,34 @@
 import React, { useState, useEffect } from 'react';
-import api from '../api';
 
-function Audit() {
+const AuditLog = () => {
   const [logs, setLogs] = useState([]);
-  const [loading, setLoading] = useState(true);
-
   useEffect(() => {
-    fetchLogs();
+    const stored = localStorage.getItem('auditLog');
+    if (stored) setLogs(JSON.parse(stored));
   }, []);
 
-  const fetchLogs = async () => {
-    try {
-      const res = await api.get('/audit');
-      setLogs(res.data);
-    } catch (error) {
-      console.error(error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  if (loading) return <div className="card">Loading audit logs...</div>;
-
   return (
-    <div className="card">
-      <h2 className="text-xl font-bold text-primary mb-4">📜 SYSTEM AUDIT TRAIL</h2>
-      <div className="overflow-x-auto">
-        <table className="min-w-full bg-white border">
-          <thead>
-            <tr className="bg-gray-100">
-              <th className="px-4 py-2 border">User</th>
-              <th className="px-4 py-2 border">Action</th>
-              <th className="px-4 py-2 border">Timestamp</th>
-            </tr>
-          </thead>
+    <div className="p-6">
+      <h1 className="text-2xl font-bold mb-4">Audit Log</h1>
+      {logs.length === 0 ? (
+        <p>No actions recorded yet. As you submit entries, they will appear here.</p>
+      ) : (
+        <table className="min-w-full border">
+          <thead className="bg-gray-100"><td><th className="border p-2">Timestamp</th><th>User</th><th>Action</th><th>Details</th></tr></thead>
           <tbody>
-            {logs.map(log => (
-              <tr key={log.id}>
-                <td className="px-4 py-2 border">{log.username}</td>
-                <td className="px-4 py-2 border">{log.action}</td>
-                <td className="px-4 py-2 border">{new Date(log.timestamp).toLocaleString()}</td>
+            {logs.map((log, idx) => (
+              <tr key={idx}>
+                <td className="border p-2">{log.timestamp}</td>
+                <td className="border p-2">{log.user}</td>
+                <td className="border p-2">{log.action}</td>
+                <td className="border p-2">{log.details}</td>
               </tr>
             ))}
-            {logs.length === 0 && (
-              <tr><td colSpan="3" className="text-center py-4 text-gray-500">No audit logs</td></tr>
-            )}
           </tbody>
         </table>
-      </div>
+      )}
     </div>
   );
-}
+};
 
-export default Audit;
+export default AuditLog;
