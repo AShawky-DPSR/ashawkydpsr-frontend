@@ -1,69 +1,52 @@
 import React, { useState, useEffect } from 'react';
 
 const Activities = () => {
-  const [activities, setActivities] = useState([]);
-  const [newAct, setNewAct] = useState({ name: '', baselineDailyQty: 0 });
+  const [list, setList] = useState([]);
+  const [name, setName] = useState('');
+  const [baseline, setBaseline] = useState(0);
 
   useEffect(() => {
-    const stored = localStorage.getItem('activities');
-    if (stored) setActivities(JSON.parse(stored));
+    setList(JSON.parse(localStorage.getItem('activities') || '[]'));
   }, []);
 
   useEffect(() => {
-    localStorage.setItem('activities', JSON.stringify(activities));
-  }, [activities]);
+    localStorage.setItem('activities', JSON.stringify(list));
+  }, [list]);
 
-  const handleAdd = () => {
-    if (!newAct.name.trim()) return;
-    const newActivity = {
-      id: Date.now(),
-      name: newAct.name,
-      baselineDailyQty: Number(newAct.baselineDailyQty) || 0,
-      status: 'Pending'
-    };
-    setActivities([...activities, newActivity]);
-    setNewAct({ name: '', baselineDailyQty: 0 });
+  const add = () => {
+    if (name.trim()) {
+      const newAct = { id: Date.now(), name, baselineDailyQty: Number(baseline), status: 'Pending' };
+      setList([...list, newAct]);
+      setName('');
+      setBaseline(0);
+    }
   };
 
-  const handleDelete = (id) => {
-    setActivities(activities.filter(a => a.id !== id));
+  const del = (id) => {
+    setList(list.filter(a => a.id !== id));
   };
 
   return (
     <div className="p-6">
       <h1 className="text-2xl font-bold mb-4">Activities</h1>
       <div className="flex gap-2 mb-6">
-        <input
-          type="text"
-          placeholder="Activity name"
-          value={newAct.name}
-          onChange={(e) => setNewAct({ ...newAct, name: e.target.value })}
-          className="border p-2 rounded flex-grow"
-        />
-        <input
-          type="number"
-          placeholder="Baseline Daily QTY"
-          value={newAct.baselineDailyQty}
-          onChange={(e) => setNewAct({ ...newAct, baselineDailyQty: e.target.value })}
-          className="border p-2 rounded w-40"
-        />
-        <button onClick={handleAdd} className="bg-blue-600 text-white px-4 py-2 rounded">Add</button>
+        <input type="text" placeholder="Activity name" value={name} onChange={e => setName(e.target.value)} className="border p-2 rounded flex-grow" />
+        <input type="number" placeholder="Baseline Daily QTY" value={baseline} onChange={e => setBaseline(e.target.value)} className="border p-2 rounded w-40" />
+        <button onClick={add} className="bg-blue-600 text-white px-4 py-2 rounded">Add</button>
       </div>
       <div className="overflow-x-auto">
         <table className="min-w-full border">
-          <thead className="bg-gray-100">
-            <tr><th className="border p-2">Activity name</th><th className="border p-2">Baseline Daily QTY</th><th className="border p-2">Status</th><th className="border p-2">Actions</th></tr>
-          </thead>
+          <thead className="bg-gray-100"><tr><th className="border p-2">Activity name</th><th className="border p-2">Baseline Daily QTY</th><th className="border p-2">Status</th><th className="border p-2">Actions</th></tr></thead>
           <tbody>
-            {activities.map(act => (
-              <tr key={act.id}>
-                <td className="border p-2">{act.name}</td>
-                <td className="border p-2">{act.baselineDailyQty}</td>
-                <td className="border p-2">{act.status}</td>
-                <td className="border p-2"><button onClick={() => handleDelete(act.id)} className="text-red-500">Delete</button></td>
+            {list.map(a => (
+              <tr key={a.id}>
+                <td className="border p-2">{a.name}</td>
+                <td className="border p-2">{a.baselineDailyQty}</td>
+                <td className="border p-2">{a.status}</td>
+                <td className="border p-2"><button onClick={() => del(a.id)} className="text-red-500">Delete</button></td>
               </tr>
             ))}
-            {activities.length === 0 && <tr><td colSpan="4" className="text-center p-4">No activities yet. Add one above.</td></tr>}
+            {list.length === 0 && <tr><td colSpan="4" className="text-center p-4">No activities yet. Add one above.</td></tr>}
           </tbody>
         </table>
       </div>
