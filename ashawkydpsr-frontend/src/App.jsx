@@ -5,9 +5,26 @@ import ProgressMonitor from './pages/ProgressMonitor';
 import Activities from './pages/Activities';
 import Reports from './pages/Reports';
 import Settings from './pages/Settings';
-import Lookahead from './pages/Lookahead';
-import Analytics from './pages/Analytics';
-import AuditLog from './pages/AuditLog';
+
+// Placeholder components (no separate files needed)
+const Lookahead = () => (
+  <div className="p-6">
+    <h1 className="text-2xl font-bold">Lookahead</h1>
+    <p>Coming soon – add progress items to see upcoming tasks.</p>
+  </div>
+);
+const Analytics = () => (
+  <div className="p-6">
+    <h1 className="text-2xl font-bold">Analytics</h1>
+    <p>Charts will appear here after you add daily entries.</p>
+  </div>
+);
+const AuditLog = () => (
+  <div className="p-6">
+    <h1 className="text-2xl font-bold">Audit Log</h1>
+    <p>User actions will be recorded here.</p>
+  </div>
+);
 
 function App() {
   const [user, setUser] = useState(null);
