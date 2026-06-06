@@ -44,6 +44,7 @@ function ProgressMonitor() {
 
   return (
     <div className="space-y-6">
+      {/* KPI Cards */}
       <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
         <div className="bg-white rounded-lg shadow p-4 border-l-4 border-accent">
           <div className="flex items-center justify-between">
@@ -92,6 +93,7 @@ function ProgressMonitor() {
         </div>
       </div>
 
+      {/* Discipline Filter */}
       <div className="card">
         <div className="flex gap-4 items-center">
           <label className="font-medium">Discipline:</label>
@@ -105,6 +107,7 @@ function ProgressMonitor() {
         </div>
       </div>
 
+      {/* Activity Progress Table */}
       <div className="card">
         <h2 className="text-xl font-bold text-primary mb-4">📋 ACTIVITY PROGRESS</h2>
         <div className="overflow-x-auto">
@@ -144,9 +147,7 @@ function ProgressMonitor() {
                 </tr>
               ))}
               {activities.length === 0 && (
-                <tr>
-                  <td colSpan="8" className="text-center py-4 text-gray-500">No activities found</td>
-                </tr>
+                <tr><td colSpan="8" className="text-center py-4 text-gray-500">No activities found</td></tr>
               )}
             </tbody>
           </table>
