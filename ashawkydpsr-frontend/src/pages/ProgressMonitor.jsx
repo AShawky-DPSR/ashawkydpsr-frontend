@@ -5,17 +5,19 @@ const ProgressMonitor = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Simulate fetching data – replace with your actual API call
     const fetchActivities = async () => {
       try {
-        // Example data structure
-        const data = [
-          { id: 1, name: 'Design Review', assignee: 'Alice', dueDate: '2026-06-10', status: 'Completed' },
-          { id: 2, name: 'Frontend Build', assignee: 'Bob', dueDate: '2026-06-12', status: 'In Progress' },
-        ];
+        // Replace with your actual API call
+        const response = await fetch('/api/progress');
+        const data = await response.json();
         setActivities(data);
       } catch (error) {
         console.error('Failed to load activities', error);
+        // Fallback mock data
+        setActivities([
+          { id: 1, name: 'Design Review', assignee: 'Alice', dueDate: '2026-06-10', status: 'Completed' },
+          { id: 2, name: 'Frontend Build', assignee: 'Bob', dueDate: '2026-06-12', status: 'In Progress' },
+        ]);
       } finally {
         setLoading(false);
       }
@@ -24,7 +26,7 @@ const ProgressMonitor = () => {
   }, []);
 
   if (loading) {
-    return <div className="p-4 text-center">Loading activities...</div>;
+    return <div className="p-4 text-center">Loading progress data...</div>;
   }
 
   return (
@@ -41,7 +43,7 @@ const ProgressMonitor = () => {
             </tr>
           </thead>
           <tbody>
-            {activities.map(act => (
+            {activities.map((act) => (
               <tr key={act.id}>
                 <td className="px-4 py-2 border">{act.name}</td>
                 <td className="px-4 py-2 border">{act.assignee}</td>
