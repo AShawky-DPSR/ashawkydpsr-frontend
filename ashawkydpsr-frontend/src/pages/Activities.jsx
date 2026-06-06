@@ -106,11 +106,12 @@ function Activities({ user }) {
               <th className="px-4 py-2 border">Discipline</th>
               <th className="px-4 py-2 border">Qty</th>
               <th className="px-4 py-2 border">Unit</th>
+              <th className="px-4 py-2 border">Baseline Daily</th>
               <th className="px-4 py-2 border">Critical</th>
               <th className="px-4 py-2 border">Planned Start</th>
               <th className="px-4 py-2 border">Planned Finish</th>
               {canEdit && <th className="px-4 py-2 border">Actions</th>}
-            </tr>
+            比
           </thead>
           <tbody>
             {activities.map(act => (
@@ -120,6 +121,7 @@ function Activities({ user }) {
                 <td className="px-4 py-2 border">{act.discipline}</td>
                 <td className="px-4 py-2 border">{act.total_quantity}</td>
                 <td className="px-4 py-2 border">{act.unit}</td>
+                <td className="px-4 py-2 border">{act.baseline_daily_qty}</td>
                 <td className="px-4 py-2 border">{act.critical ? 'Yes' : 'No'}</td>
                 <td className="px-4 py-2 border">{act.planned_start || '-'}</td>
                 <td className="px-4 py-2 border">{act.planned_finish || '-'}</td>
@@ -160,6 +162,10 @@ function Activities({ user }) {
               <div>
                 <label className="block text-sm font-medium mb-1">Unit</label>
                 <input name="unit" value={formData.unit} onChange={handleChange} className="input" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Baseline Daily Qty</label>
+                <input name="baseline_daily_qty" type="number" value={formData.baseline_daily_qty} onChange={handleChange} className="input" />
               </div>
               <div>
                 <label className="block text-sm font-medium mb-1">Critical</label>
