@@ -1,34 +1,34 @@
 import React, { useState, useEffect } from 'react';
-import { fetchProgress, saveProgressItem, updateProgressItem, deleteProgressItem, fetchActivities } from '../services/mockData';
 
 const ProgressMonitor = () => {
   const [progress, setProgress] = useState([]);
   const [activities, setActivities] = useState([]);
   const [newItem, setNewItem] = useState({ activity: '', assignee: '', dueDate: '', status: 'Not Started' });
 
-  const load = async () => {
-    const [prog, acts] = await Promise.all([fetchProgress(), fetchActivities()]);
-    setProgress(prog);
-    setActivities(acts);
-  };
+  useEffect(() => {
+    const storedProgress = localStorage.getItem('progressItems');
+    if (storedProgress) setProgress(JSON.parse(storedProgress));
+    const storedActs = localStorage.getItem('activities');
+    if (storedActs) setActivities(JSON.parse(storedActs));
+  }, []);
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => {
+    localStorage.setItem('progressItems', JSON.stringify(progress));
+  }, [progress]);
 
-  const handleAdd = async () => {
+  const handleAdd = () => {
     if (!newItem.activity) return;
-    await saveProgressItem(newItem);
+    const newProg = { id: Date.now(), ...newItem };
+    setProgress([...progress, newProg]);
     setNewItem({ activity: '', assignee: '', dueDate: '', status: 'Not Started' });
-    await load();
   };
 
-  const handleStatusChange = async (id, newStatus) => {
-    await updateProgressItem(id, { status: newStatus });
-    await load();
+  const handleStatusChange = (id, newStatus) => {
+    setProgress(progress.map(p => p.id === id ? { ...p, status: newStatus } : p));
   };
 
-  const handleDelete = async (id) => {
-    await deleteProgressItem(id);
-    await load();
+  const handleDelete = (id) => {
+    setProgress(progress.filter(p => p.id !== id));
   };
 
   return (
@@ -50,9 +50,7 @@ const ProgressMonitor = () => {
       </div>
       <div className="overflow-x-auto">
         <table className="min-w-full border">
-          <thead className="bg-gray-100">
-            <tr><th className="border p-2">Activity</th><th>Assignee</th><th>Due Date</th><th>Status</th><th>Actions</th></tr>
-          </thead>
+          <thead className="bg-gray-100"><tr><th className="border p-2">Activity</th><th>Assignee</th><th>Due Date</th><th>Status</th><th>Actions</th></tr></thead>
           <tbody>
             {progress.map(p => (
               <tr key={p.id}>
