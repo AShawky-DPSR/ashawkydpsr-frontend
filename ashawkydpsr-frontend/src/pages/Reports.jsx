@@ -13,19 +13,46 @@ const Reports = () => {
     URL.revokeObjectURL(url);
   };
 
-  const generateMockCSV = () => {
-    return "Date,Activity,Planned,Actual,Status\n2026-06-01,Activity A,100,95,On Track\n2026-06-02,Activity B,80,82,On Track";
+  const getDailyEntriesCSV = () => {
+    const entries = JSON.parse(localStorage.getItem('dailyEntries') || '[]');
+    if (entries.length === 0) return "No data available";
+    const headers = "Date,Activity,Engineer,Planned,Actual,Unit,Cumulative,Status\n";
+    const rows = entries.map(e => `${e.date},${e.activity},${e.engineer},${e.plannedQty},${e.actualQty},${e.unit},${e.cumulative},${e.actualQty >= e.plannedQty ? 'On Track' : 'Behind'}`).join('\n');
+    return headers + rows;
   };
 
-  const exportCSV = (type) => {
-    downloadCSV(`${type}_${new Date().toISOString().slice(0,10)}.csv`, generateMockCSV());
+  const getActivitiesCSV = () => {
+    const acts = JSON.parse(localStorage.getItem('activities') || '[]');
+    if (acts.length === 0) return "No activities";
+    const headers = "Name,Baseline Daily QTY,Status\n";
+    const rows = acts.map(a => `${a.name},${a.baselineDailyQty},${a.status}`).join('\n');
+    return headers + rows;
   };
+
+  const getFullDBExport = () => {
+    const data = {
+      dailyEntries: JSON.parse(localStorage.getItem('dailyEntries') || '[]'),
+      activities: JSON.parse(localStorage.getItem('activities') || '[]'),
+      progress: JSON.parse(localStorage.getItem('progressItems') || '[]'),
+      settings: {
+        engineerEditWindow: localStorage.getItem('engineerEditWindow') || 24,
+        licenseExpiry: localStorage.getItem('licenseExpiry') || '2026-07-01',
+      }
+    };
+    return JSON.stringify(data, null, 2);
+  };
+
+  const exportDaily = () => downloadCSV(`daily_report_${new Date().toISOString().slice(0,10)}.csv`, getDailyEntriesCSV());
+  const exportWeekly = () => downloadCSV(`weekly_report_${new Date().toISOString().slice(0,10)}.csv`, getDailyEntriesCSV()); // same for demo
+  const exportMonthly = () => downloadCSV(`monthly_report_${new Date().toISOString().slice(0,10)}.csv`, getDailyEntriesCSV());
+  const exportActivities = () => downloadCSV(`activities_${new Date().toISOString().slice(0,10)}.csv`, getActivitiesCSV());
+  const exportFullDB = () => downloadCSV(`full_export_${new Date().toISOString().slice(0,10)}.json`, getFullDBExport());
 
   const printToPDF = () => {
     const win = window.open('', '_blank');
     win.document.write(`
       <html><head><title>Progress Report</title></head>
-      <body><h1>Progress Report</h1><pre>${generateMockCSV()}</pre>
+      <body><h1>Daily Progress Report</h1><pre>${getDailyEntriesCSV()}</pre>
       <p>Use browser's Save as PDF option.</p></body></html>
     `);
     win.document.close();
@@ -40,18 +67,14 @@ const Reports = () => {
     <div className="p-6">
       <h1 className="text-2xl font-bold mb-4">Reports</h1>
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <button onClick={() => exportCSV('daily_report')} className="bg-blue-500 text-white p-2 rounded">Daily Progress Report</button>
-        <button onClick={() => exportCSV('weekly_report')} className="bg-blue-500 text-white p-2 rounded">Weekly Progress Report</button>
-        <button onClick={() => exportCSV('monthly_report')} className="bg-blue-500 text-white p-2 rounded">Monthly Progress Report</button>
+        <button onClick={exportDaily} className="bg-blue-500 text-white p-2 rounded">Daily Progress Report</button>
+        <button onClick={exportWeekly} className="bg-blue-500 text-white p-2 rounded">Weekly Progress Report</button>
+        <button onClick={exportMonthly} className="bg-blue-500 text-white p-2 rounded">Monthly Progress Report</button>
         <button onClick={printToPDF} className="bg-green-600 text-white p-2 rounded">PDF Report</button>
-        <button onClick={() => exportCSV('activities_export')} className="bg-purple-500 text-white p-2 rounded">Export Activities</button>
-        <button onClick={() => exportCSV('full_db')} className="bg-purple-500 text-white p-2 rounded">Full Database Export</button>
-        <button onClick={() => alert("Import CSV file")} className="bg-yellow-500 text-white p-2 rounded">Import Activities</button>
+        <button onClick={exportActivities} className="bg-purple-500 text-white p-2 rounded">Export Activities</button>
+        <button onClick={exportFullDB} className="bg-purple-500 text-white p-2 rounded">Full Database Export</button>
+        <button onClick={() => alert("Import feature: upload CSV")} className="bg-yellow-500 text-white p-2 rounded">Import Activities</button>
         <button onClick={aiForecast} className="bg-red-500 text-white p-2 rounded">AI Forecast Report</button>
-      </div>
-      <div className="mt-8 p-4 bg-gray-100 rounded">
-        <h2 className="font-bold">Preview (mock data)</h2>
-        <pre className="text-sm">{generateMockCSV()}</pre>
       </div>
     </div>
   );
