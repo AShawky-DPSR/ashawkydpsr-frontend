@@ -147,7 +147,9 @@ function ProgressMonitor() {
                 </tr>
               ))}
               {activities.length === 0 && (
-                <tr><td colSpan="8" className="text-center py-4 text-gray-500">No activities found</td></tr>
+                <tr>
+                  <td colSpan="8" className="text-center py-4 text-gray-500">No activities found<\/td>
+                </tr>
               )}
             </tbody>
           </table>
