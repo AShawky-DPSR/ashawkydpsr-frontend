@@ -4,7 +4,7 @@ import { fetchActivities, saveActivity, deleteActivity } from '../services/mockD
 const Activities = () => {
   const [activities, setActivities] = useState([]);
   const [newAct, setNewAct] = useState({ name: '', baselineDailyQty: 0 });
-  const [canEdit, setCanEdit] = useState(true); // will be role-based later
+  const [canEdit] = useState(true);
 
   const load = async () => {
     const data = await fetchActivities();
@@ -21,12 +21,12 @@ const Activities = () => {
       status: 'Pending'
     });
     setNewAct({ name: '', baselineDailyQty: 0 });
-    load();
+    await load();
   };
 
   const handleDelete = async (id) => {
     await deleteActivity(id);
-    load();
+    await load();
   };
 
   return (
@@ -51,17 +51,19 @@ const Activities = () => {
       </div>
       <div className="overflow-x-auto">
         <table className="min-w-full border">
-          <thead className="bg-gray-100"><tr><th className="border p-2">Activity Name</th><th className="border p-2">Baseline Daily QTY</th><th className="border p-2">Status</th>{canEdit && <th className="border p-2">Actions</th>} </tr></thead>
+          <thead className="bg-gray-100">
+            <tr><th className="border p-2">Activity name</th><th className="border p-2">Baseline Daily QTY</th><th className="border p-2">Status</th><th className="border p-2">Actions</th></tr>
+          </thead>
           <tbody>
             {activities.map(act => (
               <tr key={act.id}>
                 <td className="border p-2">{act.name}</td>
                 <td className="border p-2">{act.baselineDailyQty}</td>
                 <td className="border p-2">{act.status}</td>
-                {canEdit && <td className="border p-2"><button onClick={() => handleDelete(act.id)} className="text-red-500">Delete</button></td>}
+                <td className="border p-2"><button onClick={() => handleDelete(act.id)} className="text-red-500">Delete</button></td>
               </tr>
             ))}
-            {activities.length === 0 && <tr><td colSpan={canEdit ? 4 : 3} className="text-center p-4">No activities yet. Add one above.</td></tr>}
+            {activities.length === 0 && <tr><td colSpan="4" className="text-center p-4">No activities yet. Add one above.</td></tr>}
           </tbody>
         </table>
       </div>
