@@ -18,17 +18,17 @@ const ProgressMonitor = () => {
     if (!newItem.activity) return;
     await saveProgressItem(newItem);
     setNewItem({ activity: '', assignee: '', dueDate: '', status: 'Not Started' });
-    load();
+    await load();
   };
 
   const handleStatusChange = async (id, newStatus) => {
     await updateProgressItem(id, { status: newStatus });
-    load();
+    await load();
   };
 
   const handleDelete = async (id) => {
     await deleteProgressItem(id);
-    load();
+    await load();
   };
 
   return (
@@ -50,7 +50,9 @@ const ProgressMonitor = () => {
       </div>
       <div className="overflow-x-auto">
         <table className="min-w-full border">
-          <thead className="bg-gray-100"><tr><th className="border p-2">Activity</th><th>Assignee</th><th>Due Date</th><th>Status</th><th>Actions</th></tr></thead>
+          <thead className="bg-gray-100">
+            <tr><th className="border p-2">Activity</th><th>Assignee</th><th>Due Date</th><th>Status</th><th>Actions</th></tr>
+          </thead>
           <tbody>
             {progress.map(p => (
               <tr key={p.id}>
